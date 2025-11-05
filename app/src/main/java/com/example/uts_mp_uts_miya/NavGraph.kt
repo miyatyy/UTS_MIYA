@@ -12,13 +12,18 @@ import id.antasari.uts_mp_UTS_MIYA.screens.SavedScreen
 import id.antasari.uts_mp_UTS_MIYA.screens.SummaryScreen
 
 @Composable
-fun NavGraph(navController: NavHostController) {
-    val context = LocalContext.current
+fun NavGraph(
+    navController: NavHostController,
+    context: Context,
+    isDarkMode: Boolean,
+    onToggleDark: (Boolean) -> Unit
+) {
     val prefs = PrefsHelper(context)
 
     NavHost(navController = navController, startDestination = "form") {
         composable("form") {
             ProfileScreen { name, kelas, hobby ->
+                // encode kalau perlu; di project sederhana ini langsung gunakan navigate dengan path
                 navController.navigate("summary/$name/$kelas/$hobby")
             }
         }
@@ -32,11 +37,14 @@ fun NavGraph(navController: NavHostController) {
                 name = name,
                 kelas = kelas,
                 hobby = hobby,
-                onSaveToDevice = { n, k, h, d ->
-                    prefs.saveProfile(n, k, h, d)
-                    navController.navigate("saved")
+                prefsHelper = prefs,
+                currentDarkMode = isDarkMode,
+                onToggleDark = { newValue ->
+                    // ubah global theme via callback yang dilewatkan dari MainActivity
+                    onToggleDark(newValue)
                 },
-                onBackToForm = { navController.popBackStack() }
+                onBackToForm = { navController.navigate("form") },
+                onSavedNavigate = { navController.navigate("saved") }
             )
         }
 

@@ -5,16 +5,21 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import id.antasari.uts_mp_UTS_MIYA.data.PrefsHelper
 
 @Composable
 fun SummaryScreen(
     name: String,
     kelas: String,
     hobby: String,
-    onSaveToDevice: (String, String, String, Boolean) -> Unit,
-    onBackToForm: () -> Unit
+    prefsHelper: PrefsHelper,
+    currentDarkMode: Boolean,
+    onToggleDark: (Boolean) -> Unit,
+    onBackToForm: () -> Unit,
+    onSavedNavigate: () -> Unit
 ) {
-    var darkMode by remember { mutableStateOf(false) }
+    // local state untuk switch, diinisialisasi dari currentDarkMode
+    var darkMode by remember { mutableStateOf(currentDarkMode) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Ringkasan Profil") }) }
@@ -33,13 +38,27 @@ fun SummaryScreen(
 
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 Text("Aktifkan Mode Gelap (Ya/Tidak)", Modifier.weight(1f))
-                Switch(checked = darkMode, onCheckedChange = { darkMode = it })
+                Switch(
+                    checked = darkMode,
+                    onCheckedChange = { newValue ->
+                        darkMode = newValue
+                        // panggil callback untuk langsung mengubah theme global
+                        onToggleDark(newValue)
+                        // jangan simpan profil penuh di sini (biar disimpan saat tombol "Simpan ke Perangkat")
+                        // tetapi karena onToggleDark juga menyimpan darkMode ke prefs di contoh MainActivity, itu sudah tercatat
+                    }
+                )
             }
 
             Spacer(Modifier.height(16.dp))
 
             Button(
-                onClick = { onSaveToDevice(name, kelas, hobby, darkMode) },
+                onClick = {
+                    // Simpan profile lengkap + darkMode ke prefs
+                    prefsHelper.saveProfile(name, kelas, hobby, darkMode)
+                    // navigasi ke saved screen
+                    onSavedNavigate()
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Simpan ke Perangkat")
